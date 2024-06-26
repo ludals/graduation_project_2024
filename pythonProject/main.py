@@ -57,7 +57,28 @@ for code in stock_list:
 # 모든 종목 데이터프레임을 하나의 데이터프레임으로 병합
 result_df = pd.concat(df_list, keys=stock_list)
 
+# 변경할 컬럼명을 사전으로 매핑
+column_mapping = {
+    '종목코드': 'Ticker',
+    '일자': 'DateTime',
+    '현재가': 'Close',
+    '시가': 'Open',
+    '저가': 'Low',
+    '고가': 'High',
+    '거래량': 'Volume',
+}
+
+# 매핑된 컬럼명들만을 포함하는 새로운 데이터프레임 생성
+selected_columns = list(column_mapping.keys())
+filtered_df = result_df[selected_columns]
+
+# 기존 컬럼 순서에 맞춰 새로운 컬럼명 리스트 생성
+new_columns = [column_mapping[col] for col in selected_columns]
+
+# 컬럼명 변경
+filtered_df.columns = new_columns
+
 # 엑셀 파일로 저장
-result_df.to_excel("stock_daily_data.xlsx")
+filtered_df.to_csv("stock_daily_data_new_col.csv", index=False)
 
 print("데이터 추출 완료")

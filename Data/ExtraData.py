@@ -16,7 +16,8 @@ data_sources = {
     'IXIC': 'NASDAQ.csv',
     'DJI': 'DowJones.csv',
     'KQ11': 'KOSDAQ.csv',
-    'KS11': 'KOSPI.csv'
+    'KS11': 'KOSPI.csv',
+     'DX-Y.NYB': 'Dollar_Index.csv'
 }
 
 # 각 데이터 소스에 대해 데이터를 읽고, CSV로 저장

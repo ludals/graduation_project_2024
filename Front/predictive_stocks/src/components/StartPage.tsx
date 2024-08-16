@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -27,26 +27,48 @@ export default function StartPage() {
   const [prediction, setPrediction] = useState(null);
 
   const companies = [
-    "Samsung Electronics",
+    "삼성전자",
     "Hyundai Motors",
     "SK Hynix",
     "LG Chem",
     // 추가적인 대기업 리스트
   ];
 
-  // 더미 차트 데이터
-  const dummyChartData = [
-    { date: "2024-08-01", price: 80000 },
-    { date: "2024-08-02", price: 80500 },
-    { date: "2024-08-03", price: 81000 },
-    // 추가적인 더미 데이터
-  ];
+  useEffect(() => {
+    if (selectedCompany) {
+      // 회사가 선택되면 CSV 파일 로드
+      loadCSVData(`/data/${selectedCompany}.csv`);
+    }
+  }, [selectedCompany]);
+
+  const loadCSVData = async (filePath) => {
+    const response = await fetch(filePath);
+    const data = await response.text();
+
+    const parsedData = parseCSVData(data);
+
+    setChartData(parsedData);
+  };
+
+  const parseCSVData = (data) => {
+    const rows = data.trim().split("\n");
+    const headers = rows[0].split(",");
+
+    return rows.slice(1).map((row) => {
+      const values = row.split(",");
+      const obj = {};
+      headers.forEach((header, index) => {
+        obj[header] = values[index];
+      });
+      return {
+        date: obj["DateTime"],
+        price: parseInt(obj["Close"].replace(/[\+\-]/g, ""), 10),
+      };
+    });
+  };
 
   const handleCompanyChange = (event) => {
     setSelectedCompany(event.target.value);
-
-    // 더미 차트 데이터 로드
-    setChartData(dummyChartData);
   };
 
   const handlePredict = () => {
@@ -71,7 +93,7 @@ export default function StartPage() {
   return (
     <div style={{ padding: "20px" }}>
       <h1>AI 주가 예측 사이트</h1>
-      
+
       <div style={{ marginBottom: "20px" }}>
         <label htmlFor="company-select">회사 선택:</label>
         <select

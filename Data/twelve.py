@@ -4,14 +4,11 @@ API_KEY = '187d5deb48ef4e87a9653c7f166eb092'
 
 symbol = '005930'
 
-# twelvedata API URL 설정
 url = f'https://api.twelvedata.com/time_series?symbol={symbol}&interval=1min&apikey={API_KEY}'
 
-# API 호출
 response = requests.get(url)
 data = response.json()
 
-# 주가 출력
 if 'values' in data:
     # 가장 최근 데이터 가져오기
     latest_data = data['values'][0]

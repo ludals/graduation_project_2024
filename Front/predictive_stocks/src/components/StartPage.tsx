@@ -71,10 +71,20 @@ export default function StartPage() {
     setSelectedCompany(event.target.value);
   };
 
-  const handlePredict = () => {
-    // 더미 예측 결과
-    const dummyPrediction = "81500";
-    setPrediction(dummyPrediction);
+  const handlePredict = async () => {
+    // FastAPI 백엔드로 예측 요청
+    const response = await fetch("http://127.0.0.1:8000/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        feature1: 3.0, // 실제 데이터로 대체
+        feature2: 1.5, // 실제 데이터로 대체
+      }),
+    });
+    const data = await response.json();
+    setPrediction(data.prediction);
   };
 
   const lineChartData = {

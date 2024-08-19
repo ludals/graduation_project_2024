@@ -25,9 +25,11 @@ export default function StartPage() {
   const [selectedCompany, setSelectedCompany] = useState("");
   const [chartData, setChartData] = useState(null);
   const [prediction, setPrediction] = useState(null);
+  const [correctedPrediction, setCorrectedPrediction] = useState(null);
+  const [error, setError] = useState(null);
 
   const companies = [
-    "삼성전자",
+    "005930_daily_data",
     "Hyundai Motors",
     "SK Hynix",
     "LG Chem",
@@ -46,7 +48,6 @@ export default function StartPage() {
     const data = await response.text();
 
     const parsedData = parseCSVData(data);
-
     setChartData(parsedData);
   };
 
@@ -56,13 +57,13 @@ export default function StartPage() {
 
     return rows.slice(1).map((row) => {
       const values = row.split(",");
-      const obj = {};
-      headers.forEach((header, index) => {
-        obj[header] = values[index];
-      });
       return {
-        date: obj["DateTime"],
-        price: parseInt(obj["Close"].replace(/[\+\-]/g, ""), 10),
+        date: values[0],
+        close: parseInt(values[1], 10),
+        open: parseInt(values[2], 10),
+        low: parseInt(values[3], 10),
+        high: parseInt(values[4], 10),
+        volume: parseInt(values[5], 10),
       };
     });
   };
@@ -72,19 +73,27 @@ export default function StartPage() {
   };
 
   const handlePredict = async () => {
-    // FastAPI 백엔드로 예측 요청
-    const response = await fetch("http://127.0.0.1:8000/predict", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        feature1: 3.0, // 실제 데이터로 대체
-        feature2: 1.5, // 실제 데이터로 대체
-      }),
-    });
-    const data = await response.json();
-    setPrediction(data.prediction);
+    if (chartData) {
+      const historicalClose = chartData.map((dataPoint) => dataPoint.close);
+      const historicalVolume = chartData.map((dataPoint) => dataPoint.volume);
+
+      // FastAPI 백엔드로 예측 요청
+      const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          historical_close: historicalClose,
+          historical_volume: historicalVolume,
+        }),
+      });
+
+      const data = await response.json();
+      setPrediction(data.predicted_close);
+      setCorrectedPrediction(data.corrected_close);
+      setError(data.error_close);
+    }
   };
 
   const lineChartData = {
@@ -92,7 +101,7 @@ export default function StartPage() {
     datasets: [
       {
         label: `${selectedCompany} 주가`,
-        data: chartData ? chartData.map((dataPoint) => dataPoint.price) : [],
+        data: chartData ? chartData.map((dataPoint) => dataPoint.close) : [],
         fill: false,
         backgroundColor: "rgb(75, 192, 192)",
         borderColor: "rgba(75, 192, 192, 0.2)",
@@ -141,7 +150,9 @@ export default function StartPage() {
       {prediction && (
         <div>
           <h2>예측 결과</h2>
-          <p>다음 날의 주가: {prediction} 원</p>
+          <p>단방향 예측된 주가: {prediction} 원</p>
+          <p>양방향 수정된 주가: {correctedPrediction} 원</p>
+          <p>오차: {error} 원</p>
         </div>
       )}
     </div>

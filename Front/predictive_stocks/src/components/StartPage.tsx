@@ -26,8 +26,6 @@ export default function StartPage() {
   const [chartData, setChartData] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [correctedPrediction, setCorrectedPrediction] = useState(null);
-  const [error, setError] = useState(null);
-
   const companies = [
     "005930_daily_data",
     "Hyundai Motors",
@@ -55,6 +53,7 @@ export default function StartPage() {
     const rows = data.trim().split("\n");
     const headers = rows[0].split(",");
 
+    // 데이터를 파싱한 후, 역순으로 정렬하여 가장 최근의 데이터가 마지막으로 오도록 함
     return rows.slice(1).map((row) => {
       const values = row.split(",");
       return {
@@ -65,8 +64,8 @@ export default function StartPage() {
         high: parseInt(values[4], 10),
         volume: parseInt(values[5], 10),
       };
-    });
-  };
+    }).reverse(); // 데이터를 역순으로 정렬
+};
 
   const handleCompanyChange = (event) => {
     setSelectedCompany(event.target.value);
@@ -92,7 +91,6 @@ export default function StartPage() {
       const data = await response.json();
       setPrediction(data.predicted_close);
       setCorrectedPrediction(data.corrected_close);
-      setError(data.error_close);
     }
   };
 
@@ -152,7 +150,6 @@ export default function StartPage() {
           <h2>예측 결과</h2>
           <p>단방향 예측된 주가: {prediction} 원</p>
           <p>양방향 수정된 주가: {correctedPrediction} 원</p>
-          <p>오차: {error} 원</p>
         </div>
       )}
     </div>

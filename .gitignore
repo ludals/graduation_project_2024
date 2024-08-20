@@ -1,2 +1,8 @@
 
 venv/
+
+.idea/
+
+Backend/__pycache__/
+
+New/__pycache__/

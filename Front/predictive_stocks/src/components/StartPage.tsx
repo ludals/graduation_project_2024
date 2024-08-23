@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { companies } from "./companies";
 
 ChartJS.register(
   CategoryScale,
@@ -28,29 +29,45 @@ export default function StartPage() {
   const [chartData, setChartData] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [correctedPrediction, setCorrectedPrediction] = useState(null);
-  const companies = [
-    "005930_daily_data",
-    "Hyundai Motors",
-    "SK Hynix",
-    "LG Chem",
-    // 추가적인 대기업 리스트
-  ];
+  const [marketData, setMarketData] = useState([]);
+
+
 
   useEffect(() => {
-    if (selectedCompany) {
-      // 회사가 선택되면 CSV 파일 로드
-      loadCSVData(`/data/${selectedCompany}.csv`);
+    loadAllCSVData();
+  }, []);
+
+  const loadAllCSVData = async () => {
+    const loadedData = [];
+    for (const company of companies) {
+      const response = await fetch(`/data/${company}.csv`);
+      const data = await response.text();
+      const parsedData = parseCSVData(data);
+      if (company === "005930_삼성전자_daily_data") {
+        console.log(parsedData[0], parsedData[1], parsedData[2]);
+      }
+  
+      if (parsedData.length >= 2) {
+        const latestData = parsedData[0];
+        const previousData = parsedData[1];
+  
+        const change = ((latestData.close - previousData.close) / previousData.close) * 100;
+  
+        loadedData.push({
+          name: company,
+          change,
+        });
+      } else {
+        console.warn(`Not enough data for ${company}`);
+        loadedData.push({
+          name: company,
+          change: 0,  // 기본값을 0으로 설정
+        });
+      }
     }
-  }, [selectedCompany]);
-
-  const loadCSVData = async (filePath) => {
-    const response = await fetch(filePath);
-    const data = await response.text();
-
-    const parsedData = parseCSVData(data);
-    setChartData(parsedData);
+    setMarketData(loadedData);
   };
-
+  
   const parseCSVData = (data) => {
     const rows = data.trim().split("\n");
     const headers = rows[0].split(",");
@@ -60,18 +77,15 @@ export default function StartPage() {
       const values = row.split(",");
       return {
         date: values[0],
-        close: parseInt(values[1], 10),
-        open: parseInt(values[2], 10),
+        open: parseInt(values[1], 10),
+        high: parseInt(values[2], 10),
         low: parseInt(values[3], 10),
-        high: parseInt(values[4], 10),
+        close: parseInt(values[4], 10),
         volume: parseInt(values[5], 10),
       };
-    }).reverse(); // 데이터를 역순으로 정렬
+    }); // 데이터를 역순으로 정렬
 };
 
-  const handleCompanyChange = (event) => {
-    setSelectedCompany(event.target.value);
-  };
 
   const handlePredict = async () => {
     if (chartData) {
@@ -112,24 +126,11 @@ export default function StartPage() {
   return (
     <div style={{ padding: "20px" }}>
       <MarketBox>
-      <StockMarketMap isPrediction={false}/>
-      <StockMarketMap isPrediction={true}/>
+      <StockMarketMap stockData={marketData} isPrediction={false} />
+      <StockMarketMap stockData={marketData} isPrediction={true} />
       </MarketBox>
       <div style={{ marginBottom: "20px" }}>
         <label htmlFor="company-select">회사 선택:</label>
-        <select
-          id="company-select"
-          value={selectedCompany}
-          onChange={handleCompanyChange}
-          style={{ marginLeft: "10px", padding: "5px" }}
-        >
-          <option value="">회사를 선택하세요</option>
-          {companies.map((company) => (
-            <option key={company} value={company}>
-              {company}
-            </option>
-          ))}
-        </select>
       </div>
 
       <div style={{ marginBottom: "20px" }}>

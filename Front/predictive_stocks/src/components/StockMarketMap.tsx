@@ -1,39 +1,39 @@
 import React from "react";
 import { Treemap, Tooltip, ResponsiveContainer } from "recharts";
-
-const stockData = [
-  { name: "AAPL", size: 2250, change: 1.5 },  // 상승
-  { name: "MSFT", size: 2000, change: -0.7 }, // 하락
-  { name: "GOOGL", size: 1500, change: 2.3 }, // 상승
-  { name: "AMZN", size: 1700, change: -1.0 }, // 하락
-  { name: "FB", size: 950, change: 3.0 },     // 상승
-  { name: "TSLA", size: 800, change: -2.5 },  // 하락
-  { name: "NVDA", size: 500, change: 1.8 },   // 상승
-];
+import { proportionalSizes } from "./predefinedSizes";  // 비율 크기를 import
 
 function getColor(change) {
   return change > 0 ? "#FF0000" : "#0000FF";
 }
 
-export default function StockMarketMap({isPrediction}) {
-  const data = stockData.map((stock) => ({
-    name: stock.name,
-    size: stock.size,
-    change: stock.change,
-    fill: getColor(stock.change),
-  }));
+function parseCompanyName(name) {
+  const parts = name.split("_");
+  return parts[1];
+}
+
+export default function StockMarketMap({ stockData, isPrediction }) {
+  // stockData를 시가총액 비율 크기 순으로 정렬
+  const sortedData = stockData
+    .map((stock) => ({
+      name: parseCompanyName(stock.name),
+      size: proportionalSizes[stock.name],  // 비율 크기 사용, 기본값 1
+      change: stock.change,
+      fill: getColor(stock.change),
+    }))
+    .sort((a, b) => b.size - a.size); // 큰 순서대로 정렬
 
   return (
     <div style={{ width: "100%", height: 600 }}>
       <h1>{isPrediction ? "Predicted Stock Market Map" : "Actual Stock Market Map"}</h1>
       <ResponsiveContainer>
         <Treemap
-          data={data}
+          data={sortedData}  // 정렬된 데이터를 Treemap에 전달
           dataKey="size"
           nameKey="name"
           stroke="#fff"
           fill="#8884d8"
           content={<CustomizedContent />}
+          
         >
           <Tooltip />
         </Treemap>
@@ -43,7 +43,9 @@ export default function StockMarketMap({isPrediction}) {
 }
 
 const CustomizedContent = (props) => {
-  const { x, y, width, height, colors, name, change } = props;
+  const { x, y, width, height, name, change } = props;
+  const formattedChange = typeof change === 'number' ? change.toFixed(2) : '0.00';
+
   return (
     <g>
       <rect
@@ -60,11 +62,25 @@ const CustomizedContent = (props) => {
       />
       {width > 60 && height > 30 && (
         <>
-          <text x={x + 10} y={y + 20} fill="#fff" fontSize={14}>
+          <text
+            x={x + width / 2}
+            y={y + height / 2 - 10}
+            fill="#fff"
+            fontSize={7} 
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
             {name}
           </text>
-          <text x={x + 10} y={y + 40} fill="#fff" fontSize={12}>
-            {change > 0 ? `+${change}%` : `${change}%`}
+          <text
+            x={x + width / 2}
+            y={y + height / 2 + 10}
+            fill="#fff"
+            fontSize={12}
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            {change > 0 ? `+${formattedChange}%` : `${formattedChange}%`}
           </text>
         </>
       )}

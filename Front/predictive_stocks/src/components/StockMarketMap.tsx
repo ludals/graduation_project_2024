@@ -1,6 +1,7 @@
 import React from "react";
 import { Treemap, Tooltip, ResponsiveContainer } from "recharts";
-import { proportionalSizes } from "./predefinedSizes";  // 비율 크기를 import
+import { proportionalSizes } from "./predefinedSizes";
+import styled from "styled-components";
 
 function getColor(change) {
   return change > 0 ? "#FF0000" : "#0000FF";
@@ -12,22 +13,21 @@ function parseCompanyName(name) {
 }
 
 export default function StockMarketMap({ stockData, isPrediction }) {
-  // stockData를 시가총액 비율 크기 순으로 정렬
   const sortedData = stockData
     .map((stock) => ({
       name: parseCompanyName(stock.name),
-      size: proportionalSizes[stock.name],  // 비율 크기 사용, 기본값 1
+      size: proportionalSizes[stock.name],
       change: stock.change,
       fill: getColor(stock.change),
     }))
-    .sort((a, b) => b.size - a.size); // 큰 순서대로 정렬
+    .sort((a, b) => b.size - a.size);
 
   return (
     <div style={{ width: "100%", height: 600 }}>
-      <h1>{isPrediction ? "Predicted Stock Market Map" : "Actual Stock Market Map"}</h1>
+      <Title>{isPrediction ? "Predicted Stock Market Map" : "Actual Stock Market Map"}</Title>
       <ResponsiveContainer>
         <Treemap
-          data={sortedData}  // 정렬된 데이터를 Treemap에 전달
+          data={sortedData}
           dataKey="size"
           nameKey="name"
           stroke="#fff"
@@ -60,13 +60,13 @@ const CustomizedContent = (props) => {
           strokeOpacity: 1,
         }}
       />
-      {width > 60 && height > 30 && (
+      {width > 30 && height > 30 && (
         <>
           <text
             x={x + width / 2}
             y={y + height / 2 - 10}
             fill="#fff"
-            fontSize={7} 
+            fontSize={10} 
             textAnchor="middle"
             dominantBaseline="middle"
           >
@@ -76,7 +76,7 @@ const CustomizedContent = (props) => {
             x={x + width / 2}
             y={y + height / 2 + 10}
             fill="#fff"
-            fontSize={12}
+            fontSize={10}
             textAnchor="middle"
             dominantBaseline="middle"
           >
@@ -87,3 +87,17 @@ const CustomizedContent = (props) => {
     </g>
   );
 };
+
+const Title = styled.h1`
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  margin: 20px 0;
+  padding: 10px;
+  border-bottom: 2px solid #ddd;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
+`;

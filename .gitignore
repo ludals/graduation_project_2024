@@ -1,8 +1,25 @@
-
+# Python virtual environment folders
 venv/
+env/
+.myenv/
+Backend/myenv/
 
+# Ignore Python bytecode and cache directories
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Ignore IDE related files
 .idea/
 
+# Ignore virtual environment in specific directories
 Backend/__pycache__/
-
 New/__pycache__/
+
+# Ignore general virtual environment folders (in any directory)
+**/venv/
+**/env/
+**/.venv/
+**/.myenv/

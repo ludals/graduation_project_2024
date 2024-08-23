@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import styled from "styled-components";
+import StockMarketMap from "./StockMarketMap";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -109,8 +111,10 @@ export default function StartPage() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>AI 주가 예측 사이트</h1>
-
+      <MarketBox>
+      <StockMarketMap isPrediction={false}/>
+      <StockMarketMap isPrediction={true}/>
+      </MarketBox>
       <div style={{ marginBottom: "20px" }}>
         <label htmlFor="company-select">회사 선택:</label>
         <select
@@ -155,3 +159,9 @@ export default function StartPage() {
     </div>
   );
 }
+
+const MarketBox = styled.div`
+  display: flex;
+  gap: 20px;
+  flex-direction: row;
+  height: 600px;`

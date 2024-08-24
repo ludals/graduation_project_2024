@@ -80,13 +80,19 @@ def load_companies(filename='companies.txt'):
     return companies
 
 # 종목 리스트 로드
-companies = load_companies()
+# companies = load_companies()
+companies = ["028260_삼성물산_daily_data",
+"207940_삼성바이오로직스_daily_data"
+,"032830_삼성생명_daily_data"
+,"018260_삼성에스디에스_daily_data"
+,"009150_삼성전기_daily_data"
+,"005930_삼성전자_daily_data"]
 
 market_file = 'processed_datas/merged_filtered_data.csv'  # 마켓 데이터 파일 경로
 
 # 모델 학습 및 저장
 for company in companies:
-    stock_file = f'processed_{company}.csv'  # 불러올 종목 CSV 파일 이름
+    stock_file = f'processed_datas/processed_{company}.csv'  # 불러올 종목 CSV 파일 이름
     if not os.path.exists(stock_file):
         print(f"File {stock_file} not found, skipping...")
         continue

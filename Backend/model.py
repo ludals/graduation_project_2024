@@ -82,7 +82,7 @@ def load_companies(filename='companies.txt'):
 # 종목 리스트 로드
 companies = load_companies()
 
-market_file = 'merged_filtered_data.csv'  # 마켓 데이터 파일 경로
+market_file = 'processed_datas/merged_filtered_data.csv'  # 마켓 데이터 파일 경로
 
 # 모델 학습 및 저장
 for company in companies:

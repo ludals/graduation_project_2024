@@ -23,7 +23,7 @@ export default function StockMarketMap({ stockData, isPrediction }) {
     .sort((a, b) => b.size - a.size);
 
   return (
-    <div style={{ width: "100%", height: 600 }}>
+    <div style={{ width: "100%" , height: 800 }}>
       <Title>{isPrediction ? "Predicted Stock Market Map" : "Actual Stock Market Map"}</Title>
       <ResponsiveContainer>
         <Treemap

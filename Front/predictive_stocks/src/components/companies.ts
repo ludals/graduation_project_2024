@@ -12,7 +12,7 @@ export const companies = [
     "051910_LG화학_daily_data",
     "079550_LIG넥스원_daily_data",
     "006260_LS_daily_data",
-    "010120_LSELECTRIC_daily_data",
+    "010120_LS ELECTRIC_daily_data",
     "229640_LS에코에너지_daily_data",
     "035420_NAVER_daily_data",
     "005490_POSCO홀딩스_daily_data",

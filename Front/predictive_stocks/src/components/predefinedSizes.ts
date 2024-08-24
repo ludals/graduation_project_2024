@@ -12,7 +12,7 @@ export const predefinedSizes: { [key: string]: number } = {
   "051910_LG화학_daily_data": 23880000000000,  // 약 23.88조 원
   "079550_LIG넥스원_daily_data": 4160000000000,  // 약 4.16조 원
   "006260_LS_daily_data": 3720000000000,  // 약 3.72조 원
-  "010120_LSELECTRIC_daily_data": 5110000000000,  // 약 5.11조 원
+  "010120_LS ELECTRIC_daily_data": 5110000000000,  // 약 5.11조 원
   "229640_LS에코에너지_daily_data": 8529030000000,  // 약 8.53조 원
   "035420_NAVER_daily_data": 26510000000000,  // 약 26.51조 원
   "005490_POSCO홀딩스_daily_data": 28750000000000,  // 약 28.75조 원

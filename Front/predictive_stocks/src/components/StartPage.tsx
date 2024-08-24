@@ -43,10 +43,6 @@ export default function StartPage() {
       const response = await fetch(`/data/${company}.csv`);
       const data = await response.text();
       const parsedData = parseCSVData(data);
-      if (company === "005930_삼성전자_daily_data") {
-        console.log(parsedData[0], parsedData[1], parsedData[2]);
-      }
-  
       if (parsedData.length >= 2) {
         const latestData = parsedData[0];
         const previousData = parsedData[1];
@@ -126,10 +122,10 @@ export default function StartPage() {
   return (
     <div style={{ padding: "20px" }}>
       <MarketBox>
-      <StockMarketMap stockData={marketData} isPrediction={false} />
-      <StockMarketMap stockData={marketData} isPrediction={true} />
+        <StockMarketMap stockData={marketData} isPrediction={false} />
+        <StockMarketMap stockData={marketData} isPrediction={true} />
       </MarketBox>
-      <div style={{ marginBottom: "20px" }}>
+      {/* <div style={{ marginBottom: "20px" }}>
         <label htmlFor="company-select">회사 선택:</label>
       </div>
 
@@ -156,7 +152,7 @@ export default function StartPage() {
           <p>단방향 예측된 주가: {prediction} 원</p>
           <p>양방향 수정된 주가: {correctedPrediction} 원</p>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
@@ -165,4 +161,4 @@ const MarketBox = styled.div`
   display: flex;
   gap: 20px;
   flex-direction: row;
-  height: 600px;`
+  height: 1000px;`

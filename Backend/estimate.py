@@ -101,7 +101,7 @@ for company in companies:
     input_tensor = torch.tensor(data_up_to_0822_scaled, dtype=torch.float32)
 
     # 모델 불러오기
-    model = TimeSeriesTransformer(input_dim=29, d_model=128, nhead=8, num_layers=6, sequence_length=input_tensor.shape[0], dropout=0.2)
+    model = TimeSeriesTransformer(input_dim=84, d_model=128, nhead=8, num_layers=6, sequence_length=input_tensor.shape[0], dropout=0.2)
     model.load_state_dict(torch.load(model_path))
     model.eval()
     

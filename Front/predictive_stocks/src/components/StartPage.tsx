@@ -79,8 +79,7 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 100%;
+  height: 98vh;
 `;
 
 const MarketBox = styled.div`
@@ -89,4 +88,6 @@ const MarketBox = styled.div`
   flex-direction: row;
   width: 100%;
   height: 100%;
+
+  overflow: hidden;
 `;

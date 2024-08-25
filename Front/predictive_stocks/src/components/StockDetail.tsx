@@ -98,7 +98,7 @@ export default function StockDetail({ name }) {
 
   return (
     <div style={{ padding: "20px" }}>
-      <div style={{ marginBottom: "20px" }}>
+      <div>
         {chartData ? (
           <div>
             <h2>{name}의 주가 차트</h2>
@@ -107,12 +107,6 @@ export default function StockDetail({ name }) {
         ) : (
           <p>데이터를 로드 중입니다...</p>
         )}
-      </div>
-
-      <div style={{ marginBottom: "20px" }}>
-        <button onClick={handlePredict} disabled={!chartData}>
-          예측하기
-        </button>
       </div>
 
       {prediction && (

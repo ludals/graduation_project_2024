@@ -69,10 +69,9 @@ bbands = ta.bbands(df['close'], length=20, std=2.0)
 df['BB_upper'], df['BB_middle'], df['BB_lower'] = bbands['BBU_20_2.0'], bbands['BBM_20_2.0'], bbands['BBL_20_2.0']
 df['ATR'] = ta.atr(df['high'], df['low'], df['close'], length=20)
 keltner = ta.kc(df['close'], df['high'], df['low']) # @TODO
-df['Keltner_channel_upper'] = keltner['']
-df['Keltner_channel_middle'] = keltner['']
-df['Keltner_channel_lower'] = keltner[''] # @TODO
-df['Chaikin_Volatility'] = ta.volatility(df['high'], df['low'])
+df['Keltner_channel_upper'] = keltner['KCLe_20_2']
+df['Keltner_channel_middle'] = keltner['KCBe_20_2']
+df['Keltner_channel_lower'] = keltner['KCLe_20_2']
 
 # 거래량 지표
 df['OBV'] = ta.obv(df['close'], df['volume'])
@@ -88,7 +87,9 @@ df['TRIX'] = trix['TRIX_20_9']
 df['TRIX_signal'] = trix['TRIXs_20_9']
 
 # 기타 지표
-df['Vortex_Plus'], df['Vortex_Minus'] = ta.vortex(df['high'], df['low'], df['close']) # @TODO
+vortex = ta.vortex(df['high'], df['low'], df['close'], 20)
+df['Vortex_Plus'] = vortex['VTXP_20']
+df['Vortex_Minus'] = vortex['VTXM_20']
 # Aroon 지표 계산 (여러 열 반환)
 aroon = ta.aroon(df['high'], df['low'], length=20)
 
@@ -98,7 +99,7 @@ df['Aroon_Down'] = aroon['AROOND_20']
 df['Ultimate_Oscillator'] = ta.uo(df['high'], df['low'], df['close'])
 
 # 3. 결과를 CSV 파일로 저장
-df.to_csv(f'ti_{stock_file}.csv')
+df.to_csv(f'ti_{stock_file}')
 
 # 4. 출력 데이터프레임 확인 (선택적)
 print(df.head())

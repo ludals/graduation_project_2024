@@ -2,20 +2,22 @@ import React from "react";
 import { Treemap, Tooltip, ResponsiveContainer } from "recharts";
 import { proportionalSizes } from "./predefinedSizes";
 import styled from "styled-components";
+import { useRouter } from "next/router";
 
 function getColor(change) {
-  return change > 0 ? "#FF0000" : "#0000FF";
-}
-
-function parseCompanyName(name) {
-  const parts = name.split("_");
-  return parts[1];
+  return change > 0 ? "#f50167" : "#4ef301";
 }
 
 export default function StockMarketMap({ stockData, isPrediction }) {
+  const router = useRouter();
+
+  const handleClick = (name) => {
+    router.push(`/stocks/${name}`);
+  };
+
   const sortedData = stockData
     .map((stock) => ({
-      name: parseCompanyName(stock.name),
+      name: stock.name,
       size: proportionalSizes[stock.name],
       change: stock.change,
       fill: getColor(stock.change),
@@ -23,31 +25,35 @@ export default function StockMarketMap({ stockData, isPrediction }) {
     .sort((a, b) => b.size - a.size);
 
   return (
-    <div style={{ width: "100%" , height: 800 }}>
-      <Title>{isPrediction ? "Predicted Stock Market Map" : "Actual Stock Market Map"}</Title>
-      <ResponsiveContainer>
+    <MarketMapContainer>
+      <Title>
+        {isPrediction
+          ? "Predicted Stock Market Map"
+          : "Actual Stock Market Map"}
+      </Title>
+      <ResponsiveContainer width="100%" height="100%">
         <Treemap
           data={sortedData}
           dataKey="size"
           nameKey="name"
           stroke="#fff"
           fill="#8884d8"
-          content={<CustomizedContent />}
-          
+          content={<CustomizedContent onClick={handleClick} />}
         >
           <Tooltip />
         </Treemap>
       </ResponsiveContainer>
-    </div>
+    </MarketMapContainer>
   );
 }
 
 const CustomizedContent = (props) => {
-  const { x, y, width, height, name, change } = props;
-  const formattedChange = typeof change === 'number' ? change.toFixed(2) : '0.00';
+  const { x, y, width, height, name, change, onClick } = props;
+  const formattedChange =
+    typeof change === "number" ? change.toFixed(2) : "0.00";
 
   return (
-    <g>
+    <g onClick={() => onClick(name)} style={{ cursor: "pointer" }}>
       <rect
         x={x}
         y={y}
@@ -66,7 +72,7 @@ const CustomizedContent = (props) => {
             x={x + width / 2}
             y={y + height / 2 - 10}
             fill="#fff"
-            fontSize={10} 
+            fontSize={10}
             textAnchor="middle"
             dominantBaseline="middle"
           >
@@ -94,10 +100,16 @@ const Title = styled.h1`
   color: #333;
   text-align: center;
   margin: 20px 0;
-  padding: 10px;
   border-bottom: 2px solid #ddd;
   background-color: #f9f9f9;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
+`;
+
+const MarketMapContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
 `;

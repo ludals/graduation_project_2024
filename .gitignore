@@ -23,3 +23,7 @@ New/__pycache__/
 **/env/
 **/.venv/
 **/.myenv/
+
+Backend/processed_datas/.DS_Store
+
+.DS_Store

@@ -5,7 +5,21 @@ import styled from "styled-components";
 import { useRouter } from "next/router";
 
 function getColor(change) {
-  return change > 0 ? "#f50167" : "#4ef301";
+  if (change >= 4) {
+    return "#df3d43";
+  } else if (change >= 2) {
+    return "#ae4349";
+  } else if (change > 0) {
+    return "#81454f";
+  } else if (Math.abs(change) < 0.01) {
+    return "#424653";
+  } else if (change >= -2) {
+    return "#4861be";
+  } else if (change >= -3) {
+    return "#5174e8";
+  } else {
+    return "#5986f7";
+  }
 }
 
 export default function StockMarketMap({ stockData, isPrediction }) {
@@ -51,7 +65,8 @@ const CustomizedContent = (props) => {
   const { x, y, width, height, name, change, onClick } = props;
   const formattedChange =
     typeof change === "number" ? change.toFixed(2) : "0.00";
-
+  const fontSize = Math.min(width, height) / 8;
+  const textSpacing = Math.min(height / 13);
   return (
     <g onClick={() => onClick(name)} style={{ cursor: "pointer" }}>
       <rect
@@ -70,9 +85,9 @@ const CustomizedContent = (props) => {
         <>
           <text
             x={x + width / 2}
-            y={y + height / 2 - 10}
+            y={y + height / 2 - textSpacing}
             fill="#fff"
-            fontSize={10}
+            fontSize={fontSize}
             textAnchor="middle"
             dominantBaseline="middle"
           >
@@ -80,9 +95,9 @@ const CustomizedContent = (props) => {
           </text>
           <text
             x={x + width / 2}
-            y={y + height / 2 + 10}
+            y={y + height / 2 + textSpacing}
             fill="#fff"
-            fontSize={10}
+            fontSize={fontSize}
             textAnchor="middle"
             dominantBaseline="middle"
           >

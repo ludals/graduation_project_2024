@@ -89,9 +89,10 @@ export default function StockDetail({ name }) {
       {
         label: `${name} 주가`,
         data: chartData ? chartData.map((dataPoint) => dataPoint.close) : [],
-        fill: false,
-        backgroundColor: "rgb(0, 0, 0)",
-        borderColor: "rgba(0, 0, 0, 0.2)",
+        fill: true,
+        backgroundColor: "rgba(0, 0, 0, 0.1)",
+        borderColor: "rgba(0, 0, 0, 1)",
+        pointRadius: 0,
       },
     ],
   };

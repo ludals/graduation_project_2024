@@ -7,6 +7,7 @@ import joblib
 import os
 
 
+
 # Transformer 모델 정의
 class TimeSeriesTransformer(nn.Module):
     def __init__(self, input_dim, d_model, nhead, num_layers, sequence_length, dropout=0.1):
@@ -140,7 +141,7 @@ for company in companies:
     model.to(torch.device("cpu"))
 
     # 모델 학습
-    train_model(model, input_tensor, epochs=40)
+    train_model(model, input_tensor, epochs=20)
 
     # 단방향 예측
     predicted_close = predict_next_day(model, input_tensor)

@@ -120,6 +120,7 @@ for company in companies:
 
     # 양방향 수정
     corrected_close = bidirectional_correction(model, input_tensor, predicted_close)
+    
 
     # 모델 저장
     model_path = f'./saved_models/{company}_transformer_model.pth'

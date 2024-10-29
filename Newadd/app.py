@@ -23,11 +23,33 @@ def load_model(ticker):
     return model
 
 # 예측 수행 함수
-def predict_price(model):
-    input_data = torch.randn(1, 10)  # 임시 입력 데이터 (10차원)
+def predict_next_day_price(model, input_data):
     with torch.no_grad():
         return model(input_data).item()
+# 예측 수행 함수
+# def predict_price(model):
+#     input_data = torch.randn(1, 10)  # 임시 입력 데이터 (10차원)
+#     with torch.no_grad():
+#         return model(input_data).item()
 
+# 1. 다음 날 예측 API
+@app.route('/api/predict-next-day', methods=['GET'])
+def predict_next_day():
+    predictions = []  # 각 ticker의 예측값을 저장할 리스트
+
+    # models 폴더에서 모든 .pth 파일 이름 추출
+    tickers = [f.split(".")[0] for f in os.listdir(MODEL_PATH) if f.endswith(".pth")]
+
+    for ticker in tickers:
+        try:
+            model = load_model(ticker)  # 모델 로드
+            input_data = torch.randn(1, 10)  # 임시 입력 데이터
+            predicted_price = predict_next_day_price(model, input_data)
+            predictions.append({"ticker": ticker, "predictedNextDayPrice": predicted_price})
+        except FileNotFoundError as e:
+            predictions.append({"ticker": ticker, "error": str(e)})
+
+    return jsonify(predictions), 200
 # 1. 모든 종목의 예측 가격 제공 API
 @app.route('/api/predicted-prices', methods=['GET'])
 def get_predicted_prices():

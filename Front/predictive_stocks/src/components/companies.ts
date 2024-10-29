@@ -12,7 +12,7 @@ export enum Companies {
   "LG 화학" = "051910_LG화학_daily_data",
   "LIG 넥스원" = "079550_LIG넥스원_daily_data",
   "LS" = "006260_LS_daily_data",
-  "LS ELECTRIC" = "010120_LS ELECTRIC_daily_data",
+  "LS ELECTRIC" = "010120_LSELECTRIC_daily_data",
   "LS 에코에너지" = "229640_LS에코에너지_daily_data",
   "NAVER" = "035420_NAVER_daily_data",
   "POSCO 홀딩스" = "005490_POSCO홀딩스_daily_data",

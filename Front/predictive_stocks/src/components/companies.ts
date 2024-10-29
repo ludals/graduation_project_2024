@@ -23,7 +23,6 @@ export enum Companies {
   "SK 텔레콤" = "017670_SK텔레콤_daily_data",
   "SK 하이닉스" = "000660_SK하이닉스_daily_data",
   "고려아연" = "010130_고려아연_daily_data",
-  "금양" = "001570_금양_daily_data",
   "기아" = "000270_기아_daily_data",
   "기업은행" = "024110_기업은행_daily_data",
   "대원전선" = "006340_대원전선_daily_data",

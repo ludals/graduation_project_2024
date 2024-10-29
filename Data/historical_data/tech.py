@@ -27,7 +27,6 @@ companies = [
     "017670_SK텔레콤_daily_data",
     "000660_SK하이닉스_daily_data",
     "010130_고려아연_daily_data",
-    "001570_금양_daily_data",
     "000270_기아_daily_data",
     "024110_기업은행_daily_data",
     "006340_대원전선_daily_data",

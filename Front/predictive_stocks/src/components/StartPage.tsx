@@ -5,11 +5,20 @@ import { Companies } from "./companies";
 
 export default function StartPage() {
   const [marketData, setMarketData] = useState([]);
+  const [predictionData, setPredictionData] = useState([]);
 
   useEffect(() => {
     loadAllCSVData();
   }, []);
 
+  // marketData가 업데이트될 때 loadPredictionData 호출
+  useEffect(() => {
+    if (marketData.length > 0) {
+      loadPredictionData(); // 예측 데이터를 로드
+    }
+  }, [marketData]);
+
+  // 현재 시장 데이터를 로드
   const loadAllCSVData = async () => {
     const loadedData = [];
 
@@ -29,12 +38,14 @@ export default function StartPage() {
 
           loadedData.push({
             name: companyName,
+            close: latestData.close, // 현재 종가
             change,
           });
         } else {
           console.warn(`Not enough data for ${companyName}`);
           loadedData.push({
             name: companyName,
+            close: 0,
             change: 0,
           });
         }
@@ -42,12 +53,52 @@ export default function StartPage() {
         console.error(`Error loading data for ${companyName}:`, error);
         loadedData.push({
           name: companyName,
+          close: 0,
           change: 0,
         });
       }
     }
 
     setMarketData(loadedData);
+  };
+
+  // 예측 데이터를 로드
+  const loadPredictionData = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/predict-next-day"
+      );
+      const predictionResults = await response.json();
+
+      const predictionChanges = predictionResults.map((prediction) => {
+        const { ticker, predictedNextDayPrice } = prediction;
+        const currentData = marketData.find((data) => data.name === ticker);
+
+        // 실제 종가와 예측 종가의 차이 계산
+        if (currentData && currentData.close) {
+          const predictedChange =
+            ((predictedNextDayPrice - currentData.close) / currentData.close) *
+            100;
+          return {
+            name: ticker,
+            close: predictedNextDayPrice, // 예측 종가
+            change: predictedChange,
+          };
+        } else {
+          console.warn(`No close data available for ${ticker}`);
+          return {
+            name: ticker,
+            close: predictedNextDayPrice, // 예측 종가 사용
+            change: 0,
+          };
+        }
+      });
+
+      setPredictionData(predictionChanges);
+      console.log("Prediction data loaded:", predictionChanges);
+    } catch (error) {
+      console.error("Error loading prediction data:", error);
+    }
   };
 
   const parseCSVData = (data) => {
@@ -69,7 +120,7 @@ export default function StartPage() {
     <Container>
       <MarketBox>
         <StockMarketMap stockData={marketData} isPrediction={false} />
-        <StockMarketMap stockData={marketData} isPrediction={true} />
+        <StockMarketMap stockData={predictionData} isPrediction={true} />
       </MarketBox>
     </Container>
   );

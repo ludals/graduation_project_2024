@@ -87,7 +87,7 @@ def load_model(ticker):
         raise FileNotFoundError(f"Model for {ticker} not found")
 
     # 모델 초기화 및 가중치 로드 (seq_length=60으로 설정)
-    model = DLinear(input_size=10, seq_length=60, pred_length=1, individual=False)
+    model = DLinear(input_size=42, seq_length=60, pred_length=1, individual=False)
     state_dict = torch.load(model_path, map_location=torch.device('cpu'))
     model.load_state_dict(state_dict)  # 가중치 로드
     model.eval()  # 평가 모드 설정
@@ -95,63 +95,47 @@ def load_model(ticker):
 
 # 예측 수행 함수 (역변환 포함)
 def predict_price(model, input_data):
-    # 스케일링된 입력 데이터 준비
-    input_data_scaled = scaler_X.transform(input_data)
+    print(f"Input data shape before scaling: {input_data.shape}")  # 디버깅용
 
-    # 텐서로 변환 후 예측 수행
-    input_tensor = torch.tensor(input_data_scaled, dtype=torch.float32)
+    # 3차원 데이터를 2차원으로 변환 (batch_size * seq_len, features)
+    input_data_reshaped = input_data.reshape(-1, input_data.shape[-1])
+
+    # 스케일링 수행
+    input_data_scaled = scaler_X.transform(input_data_reshaped)
+
+    # 다시 3차원으로 변환 (batch_size, seq_len, features)
+    input_tensor = torch.tensor(input_data_scaled, dtype=torch.float32).unsqueeze(0)
+
     with torch.no_grad():
-        predicted_scaled = model(input_tensor).item()
+        output = model(input_tensor)  # 예측 수행
+        print(f"Model output shape: {output.shape}")  # 디버깅용
+
+        # 다차원 텐서 처리: 첫 번째 값만 사용하거나 평균 계산
+        predicted_scaled = output.mean().item()
 
     # 예측된 값을 역변환
     predicted_price = scaler_y.inverse_transform([[predicted_scaled]])[0][0]
+    
+    print(f"Predicted price: {predicted_price}")
     return predicted_price
-
-"""def predict_next_day_price(model, input_data):
-    with torch.no_grad():
-        output = model(input_data)
-        # 첫 번째 예측 값만 선택 (예: 출력이 [1, pred_length, channel] 형태일 경우)
-        return output[0, 0, 0].item()  # 필요한 경우 인덱스를 조정
-"""
-# 예측 수행 함수
-# def predict_price(model):
-#     input_data = torch.randn(1, 10)  # 임시 입력 데이터 (10차원)
-#     with torch.no_grad():
-#         return model(input_data).item()
 
 # 1. 다음 날 예측 API
 @app.route('/api/predict-next-day', methods=['GET'])
 def predict_next_day():
     predictions = []
 
-    # models 폴더에서 모든 .pth 파일 이름 추출
     tickers = [f.split(".")[0] for f in os.listdir(MODEL_PATH) if f.endswith(".pth")]
 
     for ticker in tickers:
         try:
             model = load_model(ticker)  # 모델 로드
-            #input_data = torch.randn(1, 60, 10)  # 임시 입력 데이터 (실제 입력 형식에 맞게 수정 필요)
-            input_data = torch.randn(1, 10).numpy()  # 임시 입력 데이터 (10차원)
-            predicted_price = predict_next_day_price(model, input_data)
+
+            # 입력 데이터 생성 (batch_size=1, seq_length=60, features=10)
+            input_data = torch.randn(1, 60, 42).numpy()
+
+            predicted_price = predict_price(model, input_data)
             predictions.append({"ticker": ticker, "predictedNextDayPrice": predicted_price})
-        except FileNotFoundError as e:
-            predictions.append({"ticker": ticker, "error": str(e)})
 
-    return jsonify(predictions), 200
-
-# 1. 모든 종목의 예측 가격 제공 API
-@app.route('/api/predicted-prices', methods=['GET'])
-def get_predicted_prices():
-    predictions = []
-
-    # models 폴더에서 모든 .pth 파일 이름 추출
-    tickers = [f.split(".")[0] for f in os.listdir(MODEL_PATH) if f.endswith(".pth")]
-
-    for ticker in tickers:
-        try:
-            model = load_model(ticker)  # 모델 로드
-            predicted_price = predict_price(model)  # 예측 수행
-            predictions.append({"ticker": ticker, "predictedPrice": predicted_price})
         except FileNotFoundError as e:
             predictions.append({"ticker": ticker, "error": str(e)})
 

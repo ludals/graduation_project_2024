@@ -42,8 +42,8 @@ export default function StockMarketMap({ stockData, isPrediction }) {
     <MarketMapContainer>
       <Title>
         {isPrediction
-          ? "Predicted Stock Market Map"
-          : "Actual Stock Market Map"}
+          ? "Predicted Stock Market Map (D+1)"
+          : "Actual Stock Market Map (D-Day)"}
       </Title>
       <ResponsiveContainer width="100%" height="100%">
         <Treemap

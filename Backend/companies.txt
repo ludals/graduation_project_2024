@@ -24,7 +24,6 @@
 010130_고려아연_daily_data
 000270_기아_daily_data
 024110_기업은행_daily_data
-006340_대원전선_daily_data
 001440_대한전선_daily_data
 034020_두산에너빌리티_daily_data
 138040_메리츠금융지주_daily_data

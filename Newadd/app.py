@@ -192,30 +192,27 @@ def predict_next_day():
             # 데이터 병합 및 준비
             features, _ = load_and_merge_data(ticker)
             print(f"Features shape for ticker {ticker}: {features.shape}")
-    
 
             # 하위 60개 행 가져오기
             input_data = features.iloc[:60][::-1].values.reshape(1, 60, -1)
 
-            SCALER_X_PATH = f"./data/{ticker}_X.pkl"  # X 스케일러 경로
-            SCALER_Y_PATH = f"./data/{ticker}_y.pkl"  # y 스케일러 경로
+            SCALER_X_PATH = f"./data/{ticker}_X.pkl"
+            SCALER_Y_PATH = f"./data/{ticker}_y.pkl"
 
-
-            
             # 예측 수행
-            predicted_price = predict_price(model, input_data,SCALER_X_PATH, SCALER_Y_PATH)
-            # 직전 종가 가져오기 (close 칼럼 사용)
+            predicted_price = predict_price(model, input_data, SCALER_X_PATH, SCALER_Y_PATH)
             price_prev = features['close'].iloc[0]
-            print(price_prev)
             predicted_price = price_prev * np.exp(predicted_price)
+            predicted_price = 0 if predicted_price == float("inf") else predicted_price
             
             predictions.append({"ticker": ticker, "predictedNextDayPrice": predicted_price})
-
         except FileNotFoundError as e:
             predictions.append({"ticker": ticker, "error": str(e)})
 
-    # JSON 응답 생성 시 ensure_ascii=False로 설정
+    print("Final predictions:", predictions)  # 확인용
     return jsonify(predictions), 200, {'Content-Type': 'application/json; charset=utf-8'}
+
+
 
 '''@app.route('/api/predict-next-day', methods=['GET'])
 def predict_next_day():

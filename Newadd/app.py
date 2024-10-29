@@ -4,6 +4,8 @@ import torch
 import os
 import json
 import joblib
+import pandas as pd
+import numpy as np
 
 # Flask 앱 초기화
 app = Flask(__name__)
@@ -11,9 +13,10 @@ CORS(app)
 
 # 경로 설정
 MODEL_PATH = "./models"  # 모델이 저장된 폴더
-DATA_PATH = "./data/stock_data.csv"  # 실제 데이터 파일 경로
+DATA_PATH = "./data"  # 실제 데이터 파일 경로
 SCALER_X_PATH = "./data/scaler_X.pkl"  # X 스케일러 경로
 SCALER_Y_PATH = "./data/scaler_y.pkl"  # y 스케일러 경로
+MARKET_INDICATORS_PATH = "./data/market_indicators.csv"
 
 # 스케일러 로드
 scaler_X = joblib.load(SCALER_X_PATH)
@@ -81,7 +84,7 @@ class DLinear(torch.nn.Module):
         return x.permute(0, 2, 1)
 
 # 모델 로드 함수
-def load_model(ticker):
+'''def load_model(ticker):
     model_path = os.path.join(MODEL_PATH, f"{ticker}.pth")
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model for {ticker} not found")
@@ -91,7 +94,22 @@ def load_model(ticker):
     state_dict = torch.load(model_path, map_location=torch.device('cpu'))
     model.load_state_dict(state_dict)  # 가중치 로드
     model.eval()  # 평가 모드 설정
+    return model'''
+# 모델 로드 함수 수정
+def load_model(ticker):
+    model_path = os.path.join(MODEL_PATH, f"{ticker}.pth")
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model for {ticker} not found")
+
+    # 모델 초기화 및 가중치 로드 (seq_length=60으로 설정)
+    model = DLinear(input_size=42, seq_length=60, pred_length=1, individual=False)
+    
+    # 가중치만 로드하도록 수정
+    state_dict = torch.load(model_path, map_location=torch.device('cpu'), weights_only=True)
+    model.load_state_dict(state_dict)  # 가중치 로드
+    model.eval()  # 평가 모드 설정
     return model
+
 
 # 예측 수행 함수 (역변환 포함)
 def predict_price(model, input_data):
@@ -119,8 +137,99 @@ def predict_price(model, input_data):
     print(f"Predicted price: {predicted_price}")
     return predicted_price
 
+def load_and_merge_data(ticker):
+    """
+    각 주식 종목 데이터와 market_indicators.csv 데이터를 날짜(Date) 기준으로 병합.
+    """
+    # 1. 주식 종목 데이터 파일 로드
+    stock_file_path = os.path.join(DATA_PATH, f"{ticker}.csv")
+    if not os.path.exists(stock_file_path):
+        raise FileNotFoundError(f"{ticker}.csv 파일이 존재하지 않습니다.")
+
+    stock_data = pd.read_csv(stock_file_path)
+
+    # 2. 시장 지표 데이터 로드
+    market_data = pd.read_csv(MARKET_INDICATORS_PATH)
+
+    # 3. 날짜를 datetime 형식으로 변환 및 정렬
+    stock_data['Date'] = pd.to_datetime(stock_data['Date'])
+    market_data['Date'] = pd.to_datetime(market_data['Date'])
+
+    stock_data = stock_data.sort_values(by='Date', ascending=False)
+    market_data = market_data.sort_values(by='Date', ascending=False)
+
+    # 4. 날짜(Date) 기준으로 병합 (inner join)
+    merged_data = pd.merge(stock_data, market_data, on='Date', how='inner')
+
+    # 5. 피처와 타겟으로 분리
+    features = merged_data.drop(columns=['Date', 'close']).values  # 피처
+    target = merged_data['close'].values  # 타겟 (종가)
+
+    return features, target
+
 # 1. 다음 날 예측 API
+# JSON 응답에서 UTF-8 인코딩 설정
 @app.route('/api/predict-next-day', methods=['GET'])
+def predict_next_day():
+    predictions = []
+
+    tickers = [f.split(".")[0] for f in os.listdir(MODEL_PATH) if f.endswith(".pth")]
+
+    for ticker in tickers:
+        try:
+            print(f"Processing ticker: {ticker}")
+
+            # 모델 로드
+            model = load_model(ticker)
+
+            # 데이터 병합 및 준비
+            features, _ = load_and_merge_data(ticker)
+
+            # feature 개수 확인 및 조정
+            if features.shape[1] < 42:
+                missing_features = 42 - features.shape[1]
+                features = np.hstack([features, np.zeros((features.shape[0], missing_features))])
+
+            # 입력 데이터 생성 (마지막 60개 행 사용)
+            input_data = features[-60:].reshape(1, 60, -1)
+
+            # 예측 수행
+            predicted_price = predict_price(model, input_data)
+            predictions.append({"ticker": ticker, "predictedNextDayPrice": predicted_price})
+
+        except FileNotFoundError as e:
+            predictions.append({"ticker": ticker, "error": str(e)})
+
+    # JSON 응답 생성 시 ensure_ascii=False로 설정
+    return jsonify(predictions), 200, {'Content-Type': 'application/json; charset=utf-8'}
+
+'''@app.route('/api/predict-next-day', methods=['GET'])
+def predict_next_day():
+    predictions = []
+
+    # data 폴더 내의 모든 주식 종목 CSV 파일의 이름을 추출
+    tickers = [f.split(".")[0] for f in os.listdir(DATA_PATH) if f.endswith(".csv") and f != "market_indicators.csv"]
+
+    for ticker in tickers:
+        try:
+            model = load_model(ticker)  # 각 종목에 맞는 모델 로드
+
+            # 5. 데이터 병합 및 준비 (각 종목별 데이터 병합)
+            features, _ = load_and_merge_data(ticker)
+
+            # 6. 입력 데이터 생성 (마지막 60개 행을 사용)
+            input_data = features[-60:].reshape(1, 60, -1)  # (1, 60, feature_size)
+
+            # 7. 예측 수행
+            predicted_price = predict_price(model, input_data)
+            predictions.append({"ticker": ticker, "predictedNextDayPrice": predicted_price})
+
+        except FileNotFoundError as e:
+            predictions.append({"ticker": ticker, "error": str(e)})
+
+    return jsonify(predictions), 200
+'''
+"""@app.route('/api/predict-next-day', methods=['GET'])
 def predict_next_day():
     predictions = []
 
@@ -140,6 +249,8 @@ def predict_next_day():
             predictions.append({"ticker": ticker, "error": str(e)})
 
     return jsonify(predictions), 200
+    """
+
 
 # 2. 종목 상세 데이터 API (실제 데이터 + 예측 데이터)
 @app.route('/api/stock-detail', methods=['GET'])

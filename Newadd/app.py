@@ -161,10 +161,10 @@ def load_and_merge_data(ticker):
     # 4. 날짜(Date) 기준으로 병합 (inner join)
     merged_data = pd.merge(stock_data, market_data, on='Date', how='inner')
 
-    # 5. 피처와 타겟으로 분리
-    features = merged_data.drop(columns=['Date', 'close']).values  # 피처
+    # 5. 피처와 타겟으로 분리 (DataFrame 형태 유지)
+    features = merged_data.drop(columns=['Date'])  # 종가 포함한 DataFrame으로 반환
     target = merged_data['close'].values  # 타겟 (종가)
-
+    print(merged_data[['Date', 'close']].head())
     return features, target
 
 # 1. 다음 날 예측 API
@@ -184,17 +184,22 @@ def predict_next_day():
 
             # 데이터 병합 및 준비
             features, _ = load_and_merge_data(ticker)
+            print(f"Features shape for ticker {ticker}: {features.shape}")
+    
 
-            # feature 개수 확인 및 조정
-            if features.shape[1] < 42:
-                missing_features = 42 - features.shape[1]
-                features = np.hstack([features, np.zeros((features.shape[0], missing_features))])
+            # 하위 60개 행 가져오기
+            input_data = features.iloc[:60][::-1].values.reshape(1, 60, -1)
 
-            # 입력 데이터 생성 (마지막 60개 행 사용)
-            input_data = features[-60:].reshape(1, 60, -1)
 
+
+            
             # 예측 수행
             predicted_price = predict_price(model, input_data)
+            # 직전 종가 가져오기 (close 칼럼 사용)
+            price_prev = features['close'].iloc[0]
+            print(price_prev)
+            predicted_price = price_prev * np.exp(predicted_price)
+            
             predictions.append({"ticker": ticker, "predictedNextDayPrice": predicted_price})
 
         except FileNotFoundError as e:

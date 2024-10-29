@@ -14,13 +14,8 @@ CORS(app)
 # 경로 설정
 MODEL_PATH = "./models"  # 모델이 저장된 폴더
 DATA_PATH = "./data"  # 실제 데이터 파일 경로
-SCALER_X_PATH = "./data/scaler_X.pkl"  # X 스케일러 경로
-SCALER_Y_PATH = "./data/scaler_y.pkl"  # y 스케일러 경로
 MARKET_INDICATORS_PATH = "./data/market_indicators.csv"
 
-# 스케일러 로드
-scaler_X = joblib.load(SCALER_X_PATH)
-scaler_y = joblib.load(SCALER_Y_PATH)
 
 # DLinear 모델 정의
 class moving_avg(torch.nn.Module):
@@ -101,20 +96,32 @@ def load_model(ticker):
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model for {ticker} not found")
 
-    # 모델 초기화 및 가중치 로드 (seq_length=60으로 설정)
-    model = DLinear(input_size=42, seq_length=60, pred_length=1, individual=False)
-    
-    # 가중치만 로드하도록 수정
-    state_dict = torch.load(model_path, map_location=torch.device('cpu'), weights_only=True)
-    model.load_state_dict(state_dict)  # 가중치 로드
-    model.eval()  # 평가 모드 설정
+    # `individual=True`로 설정
+    model = DLinear(input_size=42, seq_length=60, pred_length=1, individual=True)
+    state_dict = torch.load(model_path, map_location=torch.device('cpu'))
+
+    # 가중치 키 조정
+    new_state_dict = {}
+    for k, v in state_dict.items():
+        if "Linear_Seasonal" in k or "Linear_Trend" in k:
+            new_key = k.replace("Linear_Seasonal", "Linear_Seasonal.0").replace("Linear_Trend", "Linear_Trend.0")
+            new_state_dict[new_key] = v
+        else:
+            new_state_dict[k] = v
+
+    model.load_state_dict(new_state_dict, strict=False)
+    model.eval()
     return model
 
 
-# 예측 수행 함수 (역변환 포함)
-def predict_price(model, input_data):
-    print(f"Input data shape before scaling: {input_data.shape}")  # 디버깅용
 
+
+
+# 예측 수행 함수 (역변환 포함)
+def predict_price(model, input_data,scaler_x, scaler_y):
+    print(f"Input data shape before scaling: {input_data.shape}")  # 디버깅용
+    scaler_X = joblib.load(scaler_x)
+    scaler_y = joblib.load(scaler_y)
     # 3차원 데이터를 2차원으로 변환 (batch_size * seq_len, features)
     input_data_reshaped = input_data.reshape(-1, input_data.shape[-1])
 
@@ -190,11 +197,13 @@ def predict_next_day():
             # 하위 60개 행 가져오기
             input_data = features.iloc[:60][::-1].values.reshape(1, 60, -1)
 
+            SCALER_X_PATH = f"./data/{ticker}_X.pkl"  # X 스케일러 경로
+            SCALER_Y_PATH = f"./data/{ticker}_y.pkl"  # y 스케일러 경로
 
 
             
             # 예측 수행
-            predicted_price = predict_price(model, input_data)
+            predicted_price = predict_price(model, input_data,SCALER_X_PATH, SCALER_Y_PATH)
             # 직전 종가 가져오기 (close 칼럼 사용)
             price_prev = features['close'].iloc[0]
             print(price_prev)

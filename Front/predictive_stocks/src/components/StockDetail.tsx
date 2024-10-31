@@ -22,16 +22,21 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+
 import { Companies } from "./companies";
 
 export default function StockDetail({ name }) {
   const [chartData, setChartData] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [correctedPrediction, setCorrectedPrediction] = useState(null);
+  const [dLinearData, setDLinearData] = useState(null);
+  const [lstmData, setLSTMData] = useState(null);
+  const [transformerData, setTransformerData] = useState(null);
 
   useEffect(() => {
     if (name && Companies[name]) {
       fetchData(Companies[name]);
+      fetchPredictions(Companies[name]); // 예측 데이터 가져오기
     }
   }, [name]);
 
@@ -42,9 +47,28 @@ export default function StockDetail({ name }) {
     setChartData(parsedData);
   };
 
+  const fetchPredictions = async (companyEnumValue) => {
+    const dLinearResponse = await fetch(
+      `/data/predict_datas/DLinear_predictions/${name}_DLinear_test_predictions_close.csv`
+    );
+    const dLinearData = await parsePredictionData(await dLinearResponse.text());
+    setDLinearData(dLinearData);
+
+    const lstmResponse = await fetch(
+      `/data/predict_datas/LSTM_predictions/${name}_LSTM_test_predictions_close.csv`
+    );
+    const lstmData = await parsePredictionData(await lstmResponse.text());
+    setLSTMData(lstmData);
+
+    const transformerResponse = await fetch(
+      `/data/predict_datas/Transformer_predictions/${name}_Transformer_test_predictions_close.csv`
+    );
+    const transformerData = await parsePredictionData(await transformerResponse.text());
+    setTransformerData(transformerData);
+  };
+
   const parseCSVData = (data) => {
     const rows = data.trim().split("\n");
-
     return rows
       .slice(1)
       .reverse()
@@ -60,6 +84,31 @@ export default function StockDetail({ name }) {
         };
       });
   };
+
+  const parsePredictionData = (data) => {
+    const rows = data.trim().split("\n");
+    return rows.slice(1).map((row) => {
+      const [date, close] = row.split(",");
+      return { date, close: parseFloat(close) };
+    });
+  };
+
+  const synchronizeDataLength = (dataArrays) => {
+    const minLength = Math.min(...dataArrays.map((arr) => arr.length));
+    return dataArrays.map((arr) => arr.slice(-minLength));
+  };
+
+  useEffect(() => {
+    if (chartData && dLinearData && lstmData && transformerData) {
+      const [syncedChartData, syncedDLinear, syncedLSTM, syncedTransformer] =
+        synchronizeDataLength([chartData, dLinearData, lstmData, transformerData]);
+
+      setChartData(syncedChartData);
+      setDLinearData(syncedDLinear);
+      setLSTMData(syncedLSTM);
+      setTransformerData(syncedTransformer);
+    }
+  }, [chartData, dLinearData, lstmData, transformerData]);
 
   const handlePredict = async () => {
     if (chartData) {
@@ -92,6 +141,30 @@ export default function StockDetail({ name }) {
         fill: true,
         backgroundColor: "rgba(0, 0, 0, 0.1)",
         borderColor: "rgba(0, 0, 0, 1)",
+        pointRadius: 0,
+      },
+      {
+        label: "DLinear 예측",
+        data: dLinearData ? dLinearData.map((point) => point.close) : [],
+        borderColor: "rgba(255, 99, 132, 1)",
+        borderWidth: 2,
+        fill: false,
+        pointRadius: 0,
+      },
+      {
+        label: "LSTM 예측",
+        data: lstmData ? lstmData.map((point) => point.close) : [],
+        borderColor: "rgba(54, 162, 235, 1)",
+        borderWidth: 2,
+        fill: false,
+        pointRadius: 0,
+      },
+      {
+        label: "Transformer 예측",
+        data: transformerData ? transformerData.map((point) => point.close) : [],
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 2,
+        fill: false,
         pointRadius: 0,
       },
     ],
